@@ -7,6 +7,8 @@ let users = [];
 
 const isValid = (username)=>{ //returns boolean
 //write code to check is the username is valid
+    console.log("*****");
+    console.log(users);
     let filtered_users = users.filter(u => u.username === username);
 
     if (filtered_users.length > 0) {
@@ -52,7 +54,41 @@ regd_users.post("/login", (req,res) => {
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  let review = req.query.review;
+  let isbn = req.params.isbn;
+  let username = req.session.authorization["username"];
+  if (isbn) {
+    let book = books[isbn];
+    if (review) {
+        book.reviews[username] = review;
+    }
+    return res.status(200).send(book);
+
+  }
+  
+  return res.status(404).json({message: "Error updating reviews"});
+});
+
+// Delete a book review
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    let isbn = req.params.isbn;
+    let username = req.session.authorization["username"];
+    if (isbn && username) {
+        let book = books[isbn];
+        if (book) {
+            if (book.reviews[username]) {
+                delete book.reviews[username];
+                return res.status(200).send({message: `Review by user [${username}] for ISBN [${isbn}] deleted successfully`});
+            } else {
+                return res.status(404).send({message: `Review by user [${username}] for ISBN [${isbn}] not found`});
+            }
+            
+        } else {
+            return res.status(404).send({message: `ISBN [${isbn}] not found`});
+        }
+    }
+    
+    return res.status(404).json({message: "Error deleting review"});
 });
 
 module.exports.authenticated = regd_users;
