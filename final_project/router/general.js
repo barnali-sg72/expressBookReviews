@@ -22,62 +22,80 @@ public_users.post("/register", (req,res) => {
   return res.status(422).json({message: "Missing data in the body"});
 });
 
+const getBooks = () => Promise.resolve(books);
+
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
   //Write your code here
-  return res.status(200).send(JSON.stringify(books));
+  getBooks()
+    .then(result => res.status(200).send(JSON.stringify(result)))
+    .catch(err => res.status(404).json({message: "Data not found"}));
+  
 });
+
+const getBooksByIsbn = (isbn) => Promise.resolve(books[isbn]);
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   //Write your code here
   let isbn = req.params.isbn;
   if (isbn) {
-    return res.status(200).send(books[isbn]);
+    getBooksByIsbn(isbn)
+        .then(result => res.status(200).send(result))
+        .catch(err => res.status(404).json({message: `Book with ISBN ${isbn} not found`}));    
+  } else {
+    return res.status(404).json({message: "Error fetching data"});
   }
-  return res.status(404).json({message: "Not Found"});
- });
   
-// Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-  //Write your code here
-  let author = req.params.author;
-  let book;
+ });
 
-  if (author) {
+const getBookDetailsByAuthor = (author) => {
+    let result = [];
     Object.keys(books).forEach((key) => {
         let val = books[key];
         if (val["author"] === author) {
-            book = val;
+            result.push(val);
         }
       });
-      if (book) {
-        return res.status(200).send(book);
-      }
-  }
+      return Promise.resolve(result);
+}
   
-  return res.status(404).json({message: "Not Found"});
+// Get book details based on author
+public_users.get('/author/:author',function (req, res) {
+  let author = req.params.author;
+ 
+  if (author) {
+    getBookDetailsByAuthor(author)
+        .then(result => res.status(200).send(JSON.stringify(result)))
+        .catch(err => res.status(404).json({message: "Not Found"}));
+  } else {
+    return res.status(404).json({message: "Error fetching data"});
+  }    
 });
 
+const getBookDetailsByTitle = (title) => {
+    let result = [];
+    Object.keys(books).forEach((key) => {
+        let val = books[key];
+        if (val["title"] === title) {
+            result.push(val);
+        }
+      });
+      return Promise.resolve(result);
+}  
+ 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
   //Write your code here
   let title = req.params.title;
-  let book;
-
-  if (title) {
-    Object.keys(books).forEach((key) => {
-        let val = books[key];
-        if (val["title"] === title) {
-            book = val;
-        }
-      });
-      if (book) {
-        return res.status(200).send(book);
-      }
-  }
   
-  return res.status(404).json({message: "Not Found"});
+  if (title) {
+    getBookDetailsByTitle(title)
+    .then(result => res.status(200).send(JSON.stringify(result)))
+    .catch(err => res.status(404).json({message: "Not Found"}));
+  } else {
+    return res.status(404).json({message: "Error fetching data"});
+  }
 });
 
 //  Get book review
