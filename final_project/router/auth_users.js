@@ -7,8 +7,6 @@ let users = [];
 
 const isValid = (username)=>{ //returns boolean
 //write code to check is the username is valid
-    console.log("*****");
-    console.log(users);
     let filtered_users = users.filter(u => u.username === username);
 
     if (filtered_users.length > 0) {
